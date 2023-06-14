@@ -23,8 +23,6 @@
  * runtime
  */
 
-constexpr std::string_view X_PREFIX                = "x:=";
-constexpr std::string_view Y_PREFIX                = "y:=";
 constexpr std::string_view NUMBER_OF_NODES         = "nodes";
 constexpr std::string_view OBJECTIVE               = "objective";
 constexpr std::string_view LOWER_BOUND_ON_OPT      = "lowerBoundOnOpt";
@@ -35,6 +33,7 @@ constexpr std::string_view TIME                    = "time";
 constexpr std::string_view AVARAGE                 = "avg";
 constexpr std::string_view VARIANCE                = "var";
 constexpr std::string_view CORRELATION             = "corr";
+constexpr std::string_view RATIO                   = "ratio";
 constexpr std::string_view BTSP                    = "btsp";
 constexpr std::string_view BTSPP                   = "btspp";
 
@@ -80,6 +79,8 @@ struct Dataset {
 
   double trait(const Trait trait) const {
     switch (trait) {
+    case Trait::numberOfNodes :
+      return numberOfNodes;
     case Trait::objective :
       return objective;
     case Trait::lowerBoundOnOpt :
@@ -101,7 +102,10 @@ struct Dataset {
 };
 
 static Trait stringToTrait(const std::string& str) {
-  if (str == OBJECTIVE) {
+  if (str == NUMBER_OF_NODES) {
+    return Trait::numberOfNodes;
+  }
+  else if (str == OBJECTIVE) {
     return Trait::objective;
   }
   else if (str == LOWER_BOUND_ON_OPT) {
@@ -131,6 +135,19 @@ static std::map<unsigned int, std::vector<double>> extractData(const std::vector
   for (const Dataset& set : data) {
     if (set.type == problemType) {
       dataPoints[set.numberOfNodes].push_back(set.trait(trait));
+    }
+  }
+  return dataPoints;
+}
+
+static std::map<unsigned int, std::vector<double>> extractRatioData(const std::vector<Dataset>& data,
+                                                                    const ProblemType& problemType,
+                                                                    const Trait& numerator,
+                                                                    const Trait denominator) {
+  std::map<unsigned int, std::vector<double>> dataPoints;
+  for (const Dataset& set : data) {
+    if (set.type == problemType) {
+      dataPoints[set.numberOfNodes].push_back(set.trait(numerator) / set.trait(denominator));
     }
   }
   return dataPoints;
@@ -206,7 +223,16 @@ static std::vector<Dataset> castIntoDataFormat(const std::vector<std::vector<dou
   return data;
 }
 
-void writeToTerminal(const std::map<unsigned int, double>& dataPoints) {
+static std::array<std::string, 2> splitInTwo(const std::string& str, const char delimiter = ',') {
+  for (size_t i = 0; i < str.length(); ++i) {
+    if (str[i] == delimiter) {
+      return std::array<std::string, 2>{str.substr(0, i), str.substr(i + 1, str.length() - i - 1)};
+    }
+  }
+  throw std::runtime_error("No delimiter " + std::to_string(delimiter) + " found in " + str);
+}
+
+static void writeToTerminal(const std::map<unsigned int, double>& dataPoints) {
   for (const auto& point : dataPoints) {
     std::cout << "(" << point.first << "," << point.second << ")";
   }
@@ -224,24 +250,48 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       type = ProblemType::BTSPP_approx;
     }
     else if (argument.starts_with(AVARAGE)) {
-      Trait trait = stringToTrait(argument.substr(AVARAGE.length() + 1, argument.length() - AVARAGE.length() - 1));
-      std::map<unsigned int, std::vector<double>> dataPoints = extractData(data, type, trait);
-      writeToTerminal(avarages(dataPoints));
+      argument = argument.substr(AVARAGE.length() + 1, argument.length() - AVARAGE.length() - 1);
+      if (argument.starts_with(RATIO)) {
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        writeToTerminal(avarages(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
+      }
+      else {
+        writeToTerminal(avarages(extractData(data, type, stringToTrait(argument))));
+      }
     }
     else if (argument.starts_with(VARIANCE)) {
-      Trait trait = stringToTrait(argument.substr(VARIANCE.length() + 1, argument.length() - VARIANCE.length() - 1));
-      std::map<unsigned int, std::vector<double>> dataPoints = extractData(data, type, trait);
-      writeToTerminal(variances(dataPoints));
+      argument = argument.substr(VARIANCE.length() + 1, argument.length() - VARIANCE.length() - 1);
+      if (argument.starts_with(RATIO)) {
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        writeToTerminal(variances(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
+      }
+      else {
+        writeToTerminal(variances(extractData(data, type, stringToTrait(argument))));
+      }
     }
     else if (argument.starts_with(CORRELATION)) {
-      std::stringstream traitsString(argument.substr(CORRELATION.length() + 1, argument.length() - CORRELATION.length() - 2));
-      std::string traitString;
-      std::getline(traitsString, traitString, ',');
-      Trait trait1 = stringToTrait(traitString);
-      std::getline(traitsString, traitString, ',');
-      Trait trait2                                            = stringToTrait(traitString);
-      std::map<unsigned int, std::vector<double>> dataPoints1 = extractData(data, type, trait1);
-      std::map<unsigned int, std::vector<double>> dataPoints2 = extractData(data, type, trait2);
+      static std::map<unsigned int, std::vector<double>> dataPoints1, dataPoints2;
+      argument = argument.substr(CORRELATION.length() + 1, argument.length() - CORRELATION.length() - 1);
+      if (argument.starts_with(RATIO)) {
+        std::array<std::string, 2> strings  = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        std::array<std::string, 2> strings2 = splitInTwo(strings[1]);
+        Trait numerator                     = stringToTrait(strings[0]);
+        Trait denominator                   = stringToTrait(strings2[0]);
+        dataPoints1                         = extractRatioData(data, type, numerator, denominator);
+        argument                            = strings2[1];
+      }
+      else {
+        std::array<std::string, 2> traits = splitInTwo(argument);
+        dataPoints1                       = extractData(data, type, stringToTrait(traits[0]));
+        argument                          = traits[1];
+      }
+      if (argument.starts_with(RATIO)) {
+        std::array<std::string, 2> strings = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        dataPoints2                        = extractRatioData(data, type, stringToTrait(strings[0]), stringToTrait(strings[1]));
+      }
+      else {
+        dataPoints2 = extractData(data, type, stringToTrait(argument));
+      }
       writeToTerminal(correlations(dataPoints1, dataPoints2));
     }
   }
