@@ -1,4 +1,5 @@
 #include <array>
+#include <cmath>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -7,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 /*
@@ -21,12 +23,20 @@
  * runtime
  */
 
-constexpr std::string_view X_PREFIX        = "x:=";
-constexpr std::string_view Y_PREFIX        = "y:=";
-constexpr std::string_view NUMBER_OF_NODES = "nodes";
-constexpr std::string_view A_FORTIORI      = "a-fortiori";
-constexpr std::string_view AVARAGE         = "avg";
-constexpr std::string_view CORRELATION     = "corr";
+constexpr std::string_view X_PREFIX                = "x:=";
+constexpr std::string_view Y_PREFIX                = "y:=";
+constexpr std::string_view NUMBER_OF_NODES         = "nodes";
+constexpr std::string_view OBJECTIVE               = "objective";
+constexpr std::string_view LOWER_BOUND_ON_OPT      = "lowerBoundOnOpt";
+constexpr std::string_view A_FORTIORI              = "a-fortiori";
+constexpr std::string_view EDGE_COUNT              = "edges";
+constexpr std::string_view EDGE_COUNT_IN_MINIMALLY = "edgesInMinimally";
+constexpr std::string_view TIME                    = "time";
+constexpr std::string_view AVARAGE                 = "avg";
+constexpr std::string_view VARIANCE                = "var";
+constexpr std::string_view CORRELATION             = "corr";
+constexpr std::string_view BTSP                    = "btsp";
+constexpr std::string_view BTSPP                   = "btspp";
 
 enum class ProblemType : unsigned int {
   BTSP_approx = 0,
@@ -90,27 +100,33 @@ struct Dataset {
   }
 };
 
-class Measure {};
+static Trait stringToTrait(const std::string& str) {
+  if (str == OBJECTIVE) {
+    return Trait::objective;
+  }
+  else if (str == LOWER_BOUND_ON_OPT) {
+    return Trait::lowerBoundOnOpt;
+  }
+  else if (str == A_FORTIORI) {
+    return Trait::aFortioriGuarantee;
+  }
+  else if (str == EDGE_COUNT) {
+    return Trait::numberOfEdgesInBiconnectedGraph;
+  }
+  else if (str == EDGE_COUNT_IN_MINIMALLY) {
+    return Trait::numberOfEdgesInMinimallyBiconnectedGraph;
+  }
+  else if (str == TIME) {
+    return Trait::time;
+  }
+  else {
+    throw std::invalid_argument("Unknown trait!");
+  }
+}
 
-class Avarage : public Measure {
-public:
-  Trait x_trait;
-  Trait avarage_trait;
-};
-
-class Correlation : public Measure {
-public:
-  Trait x_trait;
-  Trait correlation_trait1;
-  Trait correlation_trait2;
-};
-
-struct Properties {
-  ProblemType type;
-  Measure measure;
-};
-
-static std::map<unsigned int, std::vector<double>> extractData(const std::vector<Dataset>& data, const ProblemType& problemType, const Trait& trait) {
+static std::map<unsigned int, std::vector<double>> extractData(const std::vector<Dataset>& data,
+                                                               const ProblemType& problemType,
+                                                               const Trait& trait) {
   std::map<unsigned int, std::vector<double>> dataPoints;
   for (const Dataset& set : data) {
     if (set.type == problemType) {
@@ -120,18 +136,44 @@ static std::map<unsigned int, std::vector<double>> extractData(const std::vector
   return dataPoints;
 }
 
-static std::vector<double> avarages(const std::vector<Dataset>& data, const ProblemType& problemType, const Trait& trait) {
-  std::map<unsigned int, std::vector<double>> dataPoints = extractData(data, problemType, trait);
-  std::vector<double> avgs;
+static std::vector<std::pair<unsigned int, double>> avarages(const std::map<unsigned int, std::vector<double>>& dataPoints) {
+  std::vector<std::pair<unsigned int, double>> avgs;
   avgs.reserve(dataPoints.size());
   for (const auto& dataPoint : dataPoints) {
     const std::vector<double>& vec = dataPoint.second;
-    avgs.push_back(std::accumulate(vec.begin(), vec.end(), 0.0) / vec.size());
+    avgs.emplace_back(dataPoint.first, std::accumulate(vec.begin(), vec.end(), 0.0) / vec.size());
   }
   return avgs;
 }
 
+static std::vector<std::pair<unsigned int, double>> variances(const std::map<unsigned int, std::vector<double>>& dataPoints) {
+  const std::vector<std::pair<unsigned int, double>> avgs = avarages(dataPoints);
+  std::vector<std::pair<unsigned int, double>> vars;
+  vars.reserve(dataPoints.size());
+  for (const auto& dataPoint : dataPoints) {
+    const std::vector<double>& vec = dataPoint.second;
+    vars.emplace_back(dataPoint.first, std::accumulate(vec.begin(), vec.end(), 0.0, [&](double sum, double a) {
+                                         return sum + std::pow(a - avgs[dataPoint.first].second, 2);
+                                       }) / vec.size());
+  }
+  return vars;
+}
 
+// static std::vector<std::pair<unsigned int, double>> correlations(const std::map<unsigned int, std::vector<double>>& dataPoints,
+//                                                                  const Trait& trait1,
+//                                                                  const Trait& trait2) {
+//   const std::vector<std::pair<unsigned int, double>> avgs1 = avarages(dataPoints, problemType, trait1);
+//   const std::vector<std::pair<unsigned int, double>> avgs2 = avarages(dataPoints, problemType, trait2);
+//   const std::vector<std::pair<unsigned int, double>> vars1 = variances(dataPoints, problemType, trait1);
+//   const std::vector<std::pair<unsigned int, double>> vars2 = variances(dataPoints, problemType, trait2);
+//   std::vector<std::pair<unsigned int, double>> corrs;
+//   corrs.reserve(dataPoints.size());
+//   for (const auto& dataPoint : dataPoints) {
+//     const double denominator = std::sqrt(vars1[dataPoint.first] * vars2[dataPoint.first]);
+//     const std::vector<double>& vec = dataPoint.second;
+//     corrs.emplace_back(dataPoint.first, std::accumulate(vec.begin(), vec.end(), 0, [&](double sum, )))
+//   }
+// }
 
 static std::vector<double> splitLine(const std::string& line) {
   std::vector<double> splittedLine;
@@ -163,25 +205,46 @@ static std::vector<Dataset> castIntoDataFormat(const std::vector<std::vector<dou
   return data;
 }
 
-void writeToFile();
+void writeToTerminal(const std::vector<std::pair<unsigned int, double>>& dataPoints) {
+  for (const auto& point : dataPoints) {
+    std::cout << "(" << point.first << "," << point.second << ")";
+  }
+  std::cout << std::endl;
+}
 
-static void readArguments(int argc, const char** argv) {
+static void readArguments(int argc, const char** argv, const std::vector<Dataset>& data) {
+  ProblemType type;
   for (int i = 2; i < argc; ++i) {
     std::string argument(argv[i]);
-    if (argument.starts_with(X_PREFIX)) {
-      if (argument.substr(X_PREFIX.length(), NUMBER_OF_NODES.length()) == NUMBER_OF_NODES) {
-        // do something
-      }
+    if (argument == BTSP) {
+      type = ProblemType::BTSP_approx;
     }
-    else if (argument.starts_with(Y_PREFIX)) {
-      if (argument.substr(Y_PREFIX.length(), AVARAGE.length()) == AVARAGE) {
-        // do something else
-      }
+    else if (argument == BTSPP) {
+      type = ProblemType::BTSPP_approx;
+    }
+    else if (argument.starts_with(AVARAGE)) {
+      Trait trait = stringToTrait(argument.substr(AVARAGE.length() + 1, argument.length() - AVARAGE.length() - 2));
+      std::map<unsigned int, std::vector<double>> dataPoints = extractData(data, type, trait);
+      writeToTerminal(avarages(dataPoints));
+    }
+    else if (argument.starts_with(VARIANCE)) {
+      Trait trait = stringToTrait(argument.substr(VARIANCE.length() + 1, argument.length() - VARIANCE.length() - 2));
+      std::map<unsigned int, std::vector<double>> dataPoints = extractData(data, type, trait);
+      writeToTerminal(variances(dataPoints));
+    }
+    else if (argument.starts_with(CORRELATION)) {
+      std::stringstream traitsString(argument.substr(CORRELATION.length() + 1, argument.length() - CORRELATION.length() - 3));
+      std::string traitString;
+      std::getline(traitsString, traitString, ',');
+      Trait trait1 = stringToTrait(traitString);
+      std::getline(traitsString, traitString, ',');
+      Trait trait2 = stringToTrait(traitString);
     }
   }
 }
 
 int main(int argc, const char** argv) {
   std::vector<Dataset> data = castIntoDataFormat(parseFileIntoVector(argv[1]));
+  readArguments(argc, argv, data);
   return 0;
 }
