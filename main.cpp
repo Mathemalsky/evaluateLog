@@ -120,7 +120,7 @@ static Trait stringToTrait(const std::string& str) {
     return Trait::time;
   }
   else {
-    throw std::invalid_argument("Unknown trait!");
+    throw std::invalid_argument("Unknown trait <" + str + ">!");
   }
 }
 
@@ -157,21 +157,24 @@ static std::map<unsigned int, double> variances(const std::map<unsigned int, std
   return vars;
 }
 
-// static std::vector<std::pair<unsigned int, double>> correlations(const std::map<unsigned int, std::vector<double>>& dataPoints1,
-//                                                                  const std::map<unsigned int, std::vector<double>>& dataPoints2,
-//                                                                  ) {
-//   const std::vector<std::pair<unsigned int, double>> avgs1 = avarages(dataPoints1);
-//   const std::vector<std::pair<unsigned int, double>> avgs2 = avarages(dataPoints2);
-//   const std::vector<std::pair<unsigned int, double>> vars1 = variances(dataPoints1);
-//   const std::vector<std::pair<unsigned int, double>> vars2 = variances(dataPoints2);
-//   std::vector<std::pair<unsigned int, double>> corrs;
-//   corrs.reserve(dataPoints.size());
-//   for (const auto& dataPoint : dataPoints) {
-//     const double denominator       = std::sqrt(vars1[dataPoint.first] * vars2[dataPoint.first]);
-//     const std::vector<double>& vec = dataPoint.second;
-//     corrs.emplace_back(dataPoint.first, std::accumulate(vec.begin(), vec.end(), 0, [&](double sum, )))
-//   }
-// }
+static std::map<unsigned int, double> correlations(const std::map<unsigned int, std::vector<double>>& dataPoints1,
+                                                   const std::map<unsigned int, std::vector<double>>& dataPoints2) {
+  const std::map<unsigned int, double> avgs1 = avarages(dataPoints1);
+  const std::map<unsigned int, double> avgs2 = avarages(dataPoints2);
+  const std::map<unsigned int, double> vars1 = variances(dataPoints1);
+  const std::map<unsigned int, double> vars2 = variances(dataPoints2);
+  std::map<unsigned int, double> corrs;
+  for (const auto& dataPoint : dataPoints1) {
+    const double denominator       = std::sqrt(vars1.at(dataPoint.first) * vars2.at(dataPoint.first));
+    const std::vector<double>& vec = dataPoint.second;
+    corrs.emplace(
+        dataPoint.first,
+        std::inner_product(vec.begin(), vec.end(), dataPoints2.at(dataPoint.first).begin(), 0.0, std::plus<>(), [&](double a, double b) {
+          return (a - avgs1.at(dataPoint.first)) * (b - avgs2.at(dataPoint.first));
+        }) / (vec.size() * denominator));
+  }
+  return corrs;
+}
 
 static std::vector<double> splitLine(const std::string& line) {
   std::vector<double> splittedLine;
@@ -207,7 +210,7 @@ void writeToTerminal(const std::map<unsigned int, double>& dataPoints) {
   for (const auto& point : dataPoints) {
     std::cout << "(" << point.first << "," << point.second << ")";
   }
-  std::cout << std::endl;
+  std::cout << std::endl << std::endl;
 }
 
 static void readArguments(int argc, const char** argv, const std::vector<Dataset>& data) {
@@ -236,7 +239,10 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       std::getline(traitsString, traitString, ',');
       Trait trait1 = stringToTrait(traitString);
       std::getline(traitsString, traitString, ',');
-      Trait trait2 = stringToTrait(traitString);
+      Trait trait2                                            = stringToTrait(traitString);
+      std::map<unsigned int, std::vector<double>> dataPoints1 = extractData(data, type, trait1);
+      std::map<unsigned int, std::vector<double>> dataPoints2 = extractData(data, type, trait2);
+      writeToTerminal(correlations(dataPoints1, dataPoints2));
     }
   }
 }
