@@ -1,0 +1,10 @@
+*
+
+# look into subdirectories
+!*/
+
+!.gitignore
+
+!CMakeLists.txt
+
+!main.cpp
