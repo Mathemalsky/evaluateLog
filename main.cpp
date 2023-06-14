@@ -136,40 +136,38 @@ static std::map<unsigned int, std::vector<double>> extractData(const std::vector
   return dataPoints;
 }
 
-static std::vector<std::pair<unsigned int, double>> avarages(const std::map<unsigned int, std::vector<double>>& dataPoints) {
-  std::vector<std::pair<unsigned int, double>> avgs;
-  avgs.reserve(dataPoints.size());
+static std::map<unsigned int, double> avarages(const std::map<unsigned int, std::vector<double>>& dataPoints) {
+  std::map<unsigned int, double> avgs;
   for (const auto& dataPoint : dataPoints) {
     const std::vector<double>& vec = dataPoint.second;
-    avgs.emplace_back(dataPoint.first, std::accumulate(vec.begin(), vec.end(), 0.0) / vec.size());
+    avgs.emplace(dataPoint.first, std::accumulate(vec.begin(), vec.end(), 0.0) / vec.size());
   }
   return avgs;
 }
 
-static std::vector<std::pair<unsigned int, double>> variances(const std::map<unsigned int, std::vector<double>>& dataPoints) {
-  const std::vector<std::pair<unsigned int, double>> avgs = avarages(dataPoints);
-  std::vector<std::pair<unsigned int, double>> vars;
-  vars.reserve(dataPoints.size());
+static std::map<unsigned int, double> variances(const std::map<unsigned int, std::vector<double>>& dataPoints) {
+  const std::map<unsigned int, double> avgs = avarages(dataPoints);
+  std::map<unsigned int, double> vars;
   for (const auto& dataPoint : dataPoints) {
     const std::vector<double>& vec = dataPoint.second;
-    vars.emplace_back(dataPoint.first, std::accumulate(vec.begin(), vec.end(), 0.0, [&](double sum, double a) {
-                                         return sum + std::pow(a - avgs[dataPoint.first].second, 2);
-                                       }) / vec.size());
+    vars.emplace(dataPoint.first, std::accumulate(vec.begin(), vec.end(), 0.0, [&](double sum, double a) {
+                                    return sum + std::pow(a - avgs.at(dataPoint.first), 2);
+                                  }) / vec.size());
   }
   return vars;
 }
 
-// static std::vector<std::pair<unsigned int, double>> correlations(const std::map<unsigned int, std::vector<double>>& dataPoints,
-//                                                                  const Trait& trait1,
-//                                                                  const Trait& trait2) {
-//   const std::vector<std::pair<unsigned int, double>> avgs1 = avarages(dataPoints, problemType, trait1);
-//   const std::vector<std::pair<unsigned int, double>> avgs2 = avarages(dataPoints, problemType, trait2);
-//   const std::vector<std::pair<unsigned int, double>> vars1 = variances(dataPoints, problemType, trait1);
-//   const std::vector<std::pair<unsigned int, double>> vars2 = variances(dataPoints, problemType, trait2);
+// static std::vector<std::pair<unsigned int, double>> correlations(const std::map<unsigned int, std::vector<double>>& dataPoints1,
+//                                                                  const std::map<unsigned int, std::vector<double>>& dataPoints2,
+//                                                                  ) {
+//   const std::vector<std::pair<unsigned int, double>> avgs1 = avarages(dataPoints1);
+//   const std::vector<std::pair<unsigned int, double>> avgs2 = avarages(dataPoints2);
+//   const std::vector<std::pair<unsigned int, double>> vars1 = variances(dataPoints1);
+//   const std::vector<std::pair<unsigned int, double>> vars2 = variances(dataPoints2);
 //   std::vector<std::pair<unsigned int, double>> corrs;
 //   corrs.reserve(dataPoints.size());
 //   for (const auto& dataPoint : dataPoints) {
-//     const double denominator = std::sqrt(vars1[dataPoint.first] * vars2[dataPoint.first]);
+//     const double denominator       = std::sqrt(vars1[dataPoint.first] * vars2[dataPoint.first]);
 //     const std::vector<double>& vec = dataPoint.second;
 //     corrs.emplace_back(dataPoint.first, std::accumulate(vec.begin(), vec.end(), 0, [&](double sum, )))
 //   }
@@ -205,7 +203,7 @@ static std::vector<Dataset> castIntoDataFormat(const std::vector<std::vector<dou
   return data;
 }
 
-void writeToTerminal(const std::vector<std::pair<unsigned int, double>>& dataPoints) {
+void writeToTerminal(const std::map<unsigned int, double>& dataPoints) {
   for (const auto& point : dataPoints) {
     std::cout << "(" << point.first << "," << point.second << ")";
   }
@@ -223,17 +221,17 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       type = ProblemType::BTSPP_approx;
     }
     else if (argument.starts_with(AVARAGE)) {
-      Trait trait = stringToTrait(argument.substr(AVARAGE.length() + 1, argument.length() - AVARAGE.length() - 2));
+      Trait trait = stringToTrait(argument.substr(AVARAGE.length() + 1, argument.length() - AVARAGE.length() - 1));
       std::map<unsigned int, std::vector<double>> dataPoints = extractData(data, type, trait);
       writeToTerminal(avarages(dataPoints));
     }
     else if (argument.starts_with(VARIANCE)) {
-      Trait trait = stringToTrait(argument.substr(VARIANCE.length() + 1, argument.length() - VARIANCE.length() - 2));
+      Trait trait = stringToTrait(argument.substr(VARIANCE.length() + 1, argument.length() - VARIANCE.length() - 1));
       std::map<unsigned int, std::vector<double>> dataPoints = extractData(data, type, trait);
       writeToTerminal(variances(dataPoints));
     }
     else if (argument.starts_with(CORRELATION)) {
-      std::stringstream traitsString(argument.substr(CORRELATION.length() + 1, argument.length() - CORRELATION.length() - 3));
+      std::stringstream traitsString(argument.substr(CORRELATION.length() + 1, argument.length() - CORRELATION.length() - 2));
       std::string traitString;
       std::getline(traitsString, traitString, ',');
       Trait trait1 = stringToTrait(traitString);
