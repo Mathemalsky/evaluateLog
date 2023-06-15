@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <exception>
@@ -33,6 +34,7 @@ constexpr std::string_view TIME                    = "time";
 constexpr std::string_view AVARAGE                 = "avg";
 constexpr std::string_view VARIANCE                = "var";
 constexpr std::string_view CORRELATION             = "corr";
+constexpr std::string_view MAXIMUM                 = "max";
 constexpr std::string_view RATIO                   = "ratio";
 constexpr std::string_view BTSP                    = "btsp";
 constexpr std::string_view BTSPP                   = "btspp";
@@ -153,6 +155,15 @@ static std::map<unsigned int, std::vector<double>> extractRatioData(const std::v
   return dataPoints;
 }
 
+static std::map<unsigned int, double> maximum(const std::map<unsigned int, std::vector<double>>& dataPoints) {
+  std::map<unsigned int, double> maxes;
+  for (const auto& dataPoint : dataPoints) {
+    const std::vector<double>& vec = dataPoint.second;
+    maxes.emplace(dataPoint.first, vec[std::distance(vec.begin(), std::max_element(vec.begin(), vec.end()))]);
+  }
+  return maxes;
+}
+
 static std::map<unsigned int, double> avarages(const std::map<unsigned int, std::vector<double>>& dataPoints) {
   std::map<unsigned int, double> avgs;
   for (const auto& dataPoint : dataPoints) {
@@ -267,6 +278,16 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       }
       else {
         writeToTerminal(variances(extractData(data, type, stringToTrait(argument))));
+      }
+    }
+    else if (argument.starts_with(MAXIMUM)) {
+      argument = argument.substr(MAXIMUM.length() + 1, argument.length() - MAXIMUM.length() - 1);
+      if (argument.starts_with(RATIO)) {
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        writeToTerminal(maximum(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
+      }
+      else {
+        writeToTerminal(maximum(extractData(data, type, stringToTrait(argument))));
       }
     }
     else if (argument.starts_with(CORRELATION)) {
