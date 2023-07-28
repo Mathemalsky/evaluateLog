@@ -133,11 +133,12 @@ static Trait stringToTrait(const std::string& str) {
 static void syntaxAdvice() {
   std::cout << "Syntax\n======\n";
   std::cout << "Type <./<programName> help> to see this page\n";
-  std::cout << "./<programName> <filename> <measurand modifier>:<measurand>\n";
-  std::cout << "possible measurand modifiers: " << AVARAGE << ", " << VARIANCE << ", " << MAXIMUM << ", " << CORRELATION << "\n";
-  std::cout << "possible measurands: " << NUMBER_OF_NODES << ", " << OBJECTIVE << ", " << LOWER_BOUND_ON_OPT << ", " << A_FORTIORI;
+  std::cout << "./<programName> <filename> <problem type> <statistical property>:<trait>\n";
+  std::cout << "The problem type can be either " << BTSP << " or " << BTSPP << ".\n";
+  std::cout << "possible statistical properties: " << AVARAGE << ", " << VARIANCE << ", " << MAXIMUM << ", " << CORRELATION << "\n";
+  std::cout << "possible traits: " << NUMBER_OF_NODES << ", " << OBJECTIVE << ", " << LOWER_BOUND_ON_OPT << ", " << A_FORTIORI;
   std::cout << ", " << EDGE_COUNT << ", " << EDGE_COUNT_IN_MINIMALLY << ", " << TIME << std::endl;
-  std::cout << "examples for <measurand modifier>:<measurand>\n";
+  std::cout << "examples for <statistical property>:<trait>\n";
   std::cout << AVARAGE << ":" << OBJECTIVE << std::endl;
   std::cout << MAXIMUM << ":" << RATIO << ":" << EDGE_COUNT << "," << EDGE_COUNT_IN_MINIMALLY << std::endl;
   std::cout << CORRELATION << ":" << RATIO << ":" << NUMBER_OF_NODES << "," << TIME << "," << A_FORTIORI << std::endl;
