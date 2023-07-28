@@ -130,6 +130,19 @@ static Trait stringToTrait(const std::string& str) {
   }
 }
 
+static void syntaxAdvice() {
+  std::cout << "Syntax\n======\n";
+  std::cout << "Type <./<programName> help> to see this page\n";
+  std::cout << "./<programName> <filename> <measurand modifier>:<measurand>\n";
+  std::cout << "possible measurand modifiers: " << AVARAGE << ", " << VARIANCE << ", " << MAXIMUM << ", " << CORRELATION << "\n";
+  std::cout << "possible measurands: " << NUMBER_OF_NODES << ", " << OBJECTIVE << ", " << LOWER_BOUND_ON_OPT << ", " << A_FORTIORI;
+  std::cout << ", " << EDGE_COUNT << ", " << EDGE_COUNT_IN_MINIMALLY << ", " << TIME << std::endl;
+  std::cout << "examples for <measurand modifier>:<measurand>\n";
+  std::cout << AVARAGE << ":" << OBJECTIVE << std::endl;
+  std::cout << MAXIMUM << ":" << RATIO << ":" << EDGE_COUNT << "," << EDGE_COUNT_IN_MINIMALLY << std::endl;
+  std::cout << CORRELATION << ":" << RATIO << ":" << NUMBER_OF_NODES << "," << TIME << "," << A_FORTIORI << std::endl;
+}
+
 static std::map<unsigned int, std::vector<double>> extractData(const std::vector<Dataset>& data,
                                                                const ProblemType& problemType,
                                                                const Trait& trait) {
@@ -217,6 +230,9 @@ static std::vector<double> splitLine(const std::string& line) {
 
 static std::vector<std::vector<double>> parseFileIntoVector(const std::string& filename) {
   std::ifstream file(filename, std::ifstream::in);
+  if (!file) {
+    throw std::runtime_error("Error: File <" + filename + "> not found!");
+  }
   std::string line;
   std::vector<std::vector<double>> cells;
   while (std::getline(file, line)) {
@@ -319,6 +335,10 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
 }
 
 int main(int argc, const char** argv) {
+  if (std::string(argv[1]) == "help") {
+    syntaxAdvice();
+    exit(0);
+  }
   std::vector<Dataset> data = castIntoDataFormat(parseFileIntoVector(argv[1]));
   readArguments(argc, argv, data);
   return 0;
