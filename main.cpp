@@ -1,3 +1,23 @@
+/*
+ * evaluateLog is a program to calculate some statistical properties based
+ * on the data collected from BTSPP and put it into a form, that can
+ * be pasted to tikzpicture for plotting.
+ * Copyright (C) 2023 Jurek Rostalsky
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -301,9 +321,9 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       type = ProblemType::BTSPP_approx;
     }
     else if (argument.starts_with(AVARAGE)) {
-      argument = argument.substr(AVARAGE.length() + 1, argument.length() - AVARAGE.length() - 1);
+      argument = argument.substr(AVARAGE.length() + 1);
       if (argument.starts_with(RATIO)) {
-        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
         writeToTerminal(avarages(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
       }
       else {
@@ -311,9 +331,9 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       }
     }
     else if (argument.starts_with(VARIANCE)) {
-      argument = argument.substr(VARIANCE.length() + 1, argument.length() - VARIANCE.length() - 1);
+      argument = argument.substr(VARIANCE.length() + 1);
       if (argument.starts_with(RATIO)) {
-        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
         writeToTerminal(variances(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
       }
       else {
@@ -321,9 +341,9 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       }
     }
     else if (argument.starts_with(MAXIMUM)) {
-      argument = argument.substr(MAXIMUM.length() + 1, argument.length() - MAXIMUM.length() - 1);
+      argument = argument.substr(MAXIMUM.length() + 1);
       if (argument.starts_with(RATIO)) {
-        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
         writeToTerminal(maximum(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
       }
       else {
@@ -332,9 +352,9 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
     }
     else if (argument.starts_with(CORRELATION)) {
       static std::map<unsigned int, std::vector<double>> dataPoints1, dataPoints2;
-      argument = argument.substr(CORRELATION.length() + 1, argument.length() - CORRELATION.length() - 1);
+      argument = argument.substr(CORRELATION.length() + 1);
       if (argument.starts_with(RATIO)) {
-        std::array<std::string, 2> strings  = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        std::array<std::string, 2> strings  = splitInTwo(argument.substr(RATIO.length() + 1));
         std::array<std::string, 2> strings2 = splitInTwo(strings[1]);
         Trait numerator                     = stringToTrait(strings[0]);
         Trait denominator                   = stringToTrait(strings2[0]);
@@ -347,7 +367,7 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
         argument                          = traits[1];
       }
       if (argument.starts_with(RATIO)) {
-        std::array<std::string, 2> strings = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        std::array<std::string, 2> strings = splitInTwo(argument.substr(RATIO.length() + 1));
         dataPoints2                        = extractRatioData(data, type, stringToTrait(strings[0]), stringToTrait(strings[1]));
       }
       else {
