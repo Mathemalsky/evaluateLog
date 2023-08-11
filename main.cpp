@@ -157,7 +157,7 @@ static void syntaxAdvice() {
   std::cout << "Syntax\n======\n";
   std::cout << "Type <./<programName> help> to see this page\n";
   std::cout << "./<programName> <filename> <problem type> <statistical property>:<trait>\n";
-  std::cout << "The problem type can be either " << BTSP << " or " << BTSPP << ".\n";
+  std::cout << "The problem type can be either " << BTSP << " or " << BTSPP << "or" << BTSVPP << ".\n";
   std::cout << "possible statistical properties: " << AVARAGE << ", " << VARIANCE << ", " << MAXIMUM << ", " << CORRELATION;
   std::cout << ", " << QUANTILE << std::endl;
   std::cout << "possible traits: " << NUMBER_OF_NODES << ", " << OBJECTIVE << ", " << LOWER_BOUND_ON_OPT << ", " << A_FORTIORI;
@@ -321,6 +321,9 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
     }
     else if (argument == BTSPP) {
       type = ProblemType::BTSPP_approx;
+    }
+    else if (argument == BTSVPP) {
+      type = ProblemType::BTSVPP_approx;
     }
     else if (argument.starts_with(AVARAGE)) {
       argument = argument.substr(AVARAGE.length() + 1);
