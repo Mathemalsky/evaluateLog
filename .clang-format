@@ -1,0 +1,484 @@
+# The examples for the settings effects are copied from clang-format style options documentation
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+---
+# Use these settings for C/C++ files
+Language: Cpp
+
+# Copy all settings that are not overwritten here from the Google style
+BasedOnStyle: Google
+
+# The extra indent or outdent of access modifiers, e.g. public:
+AccessModifierOffset: -2
+
+# someLongFunction(argument1,
+#                  argument2);
+AlignAfterOpenBracket: Align
+
+# struct test demo[] =
+# {
+#     {56,    23, "hello"},
+#     {-1, 93463, "world"},
+#     { 7,     5,    "!!"}
+# };
+AlignArrayOfStructures: Right
+
+# int aaaa = 12;
+# int b    = 23;
+# int ccc  = 23;
+AlignConsecutiveAssignments: Consecutive
+
+AlignConsecutiveBitFields: Consecutive
+
+# NOT!
+# int         aaaa = 12;
+# float       b = 23;
+# std::string ccc = 23;
+AlignConsecutiveDeclarations: false
+
+AlignConsecutiveMacros: Consecutive
+
+# #define A   \
+#   int aaaa; \
+#   int b;    \
+AlignEscapedNewlinesLeft: true
+
+# int aaa = bbbbbbbbbbbbbbb +
+#           ccccccccccccccc;
+AlignOperands: true
+
+# int a;      // My comment a
+# int b = 2;  // comment  b
+AlignTrailingComments: true
+
+# true:
+# callFunction(
+#     a, b, c, d);
+# false:
+# callFunction(a,
+#              b,
+#              c,
+#              d);
+AllowAllArgumentsOnNextLine: false
+
+# void myFunction(int a,
+#                 int b,
+#                 int c);
+AllowAllParametersOfDeclarationOnNextLine: false
+
+# NOT!
+# if (a) { return; }
+AllowShortBlocksOnASingleLine: Empty
+
+# NOT!
+# case 1: x = 1; break;
+AllowShortCaseLabelsOnASingleLine: false
+
+# NOT!
+# enum { A, B } myEnum;
+AllowShortEnumsOnASingleLine: false
+
+# Never merge functions into a single line
+AllowShortFunctionsOnASingleLine: Inline
+
+# NOT!
+# if (a) return;
+AllowShortIfStatementsOnASingleLine: false
+
+# auto lambda = [](int a) { return a; };
+AllowShortLambdasOnASingleLine: All
+
+# NOT!
+# while (true) continue;
+AllowShortLoopsOnASingleLine: false
+
+# class A {
+#     int f() {
+#         return 0;
+#     };
+# };
+# int f();
+# int f() { return 1; }
+AlwaysBreakAfterReturnType: None
+
+# aaaa =
+#     "bbbb"
+#     "cccc";
+AlwaysBreakBeforeMultilineStrings: true
+
+# template <typename T>
+# class C {
+# };
+AlwaysBreakTemplateDeclarations: true
+
+# true:
+# void f() {
+#   f(aaaaaaaaaaaaaaaaaaaa, aaaaaaaaaaaaaaaaaaaa,
+#     aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa);
+# }
+# false:
+# void f() {
+#   f(aaaaaaaaaaaaaaaaaaaa,
+#     aaaaaaaaaaaaaaaaaaaa,
+#     aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa);
+# }
+BinPackArguments: false
+
+# true:
+# void f(int aaaaaaaaaaaaaaaaaaaa, int aaaaaaaaaaaaaaaaaaaa,
+#        int aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa) {}
+# false:
+# void f(int aaaaaaaaaaaaaaaaaaaa,
+#        int aaaaaaaaaaaaaaaaaaaa,
+#        int aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa) {}
+BinPackParameters: false
+
+# Customize brace breaking/wrapping
+BreakBeforeBraces: Custom
+
+BraceWrapping:
+    # switch (foo) {
+    #   case 1: {
+    #     bar();
+    #     break;
+    #   }
+    #   default: {
+    #     plop();
+    #   }
+    # }      
+    AfterCaseLabel: false
+    
+    # class foo {
+    # };
+    AfterClass: false
+
+    # if (foo()) {
+    # }
+    # else {
+    # }
+    AfterControlStatement: false
+
+    # enum X : int {
+    #     B
+    # };
+    AfterEnum: false
+
+    # void foo() {
+    #     bar();
+    #     bar2();
+    # }
+    AfterFunction: false
+
+    # namespace {
+    # int foo();
+    # int bar();
+    # }
+    AfterNamespace: false
+
+    # struct foo {
+    #     int x;
+    # };
+    AfterStruct: false
+
+    # union foo {
+    #     int x;
+    # };
+    AfterUnion: false
+    
+    # extern "C" {
+    # int foo();
+    # }
+    AfterExternBlock: false
+
+    # try {
+    #     foo();
+    # }
+    # catch () {
+    # }
+    BeforeCatch: true
+
+    # if (foo()) {
+    # }
+    # else {
+    # }
+    BeforeElse: true
+    
+    # connect([]() {
+    #   foo();
+    #   bar();
+    # });
+    BeforeLambdaBody: false
+    
+    # do {
+    #   foo();
+    # } while (1);
+    BeforeWhile: false
+
+    # Do not indent the braces themselves
+    IndentBraces: false
+    
+    # NOT!
+    # int f()
+    # {
+    # }
+    SplitEmptyFunction: false
+    
+    # NOT!
+    # namespace foo
+    # {
+    # }
+    SplitEmptyNamespace: false
+    
+    # Put body of empty class, struct, union on single line
+    SplitEmptyRecord: false
+
+# BreakAfterAttributes: Leave
+
+# LooooooooooongType loooooooooooooooooooooongVariable =
+#     someLooooooooooooooooongFunction();
+#
+# bool value = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                      + aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                  == aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#              && aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                     > ccccccccccccccccccccccccccccccccccccccccc;
+BreakBeforeBinaryOperators: NonAssignment
+
+# BreakBeforeConceptDeclarations: Allowed
+
+# veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongDescription
+#     ? firstValue
+#     : SecondValueVeryVeryVeryVeryLong;
+BreakBeforeTernaryOperators: true
+
+# Constructor()
+#     : initializer1()
+#     , initializer2()
+BreakConstructorInitializers: AfterColon
+
+# BreakInheritanceList: Never
+
+# Allow breaking string literals when formatting
+BreakStringLiterals: true
+
+# The column limit
+ColumnLimit: 140
+
+# The number of characters to use for indentation of constructor initializer lists
+ConstructorInitializerIndentWidth: 2
+
+# NOT!
+# namespace Foo { namespace Bar {
+# }}
+CompactNamespaces: false
+
+# int i =         //  VeryVeryVeryVeryVeryLongComment
+#   longFunction( // Again a long comment
+#     arg);
+ContinuationIndentWidth: 4
+
+# vector<int> x{1, 2, 3, 4};
+# vector<T> x{{}, {}, {}, {}};
+# f(MyMap[{composite, key}]);
+# new int[3]{1, 2, 3};
+Cpp11BracedListStyle: true
+
+# Do not automatically derive the pointer alignment, use my setting all the time
+DerivePointerAlignment: false
+
+# Do not disable formatting at all
+DisableFormat: false
+
+# NOT!
+# public:
+#
+# int i;
+EmptyLineAfterAccessModifier: Never
+
+EmptyLineBeforeAccessModifier: LogicalBlock
+
+# Sort includes inside each block seperately.
+IncludeBlocks: Preserve
+
+# switch (foo) {
+# case 1: {
+#   bar();
+# } break;
+# default: {
+#   plop();
+# }
+# }
+IndentCaseBlocks: false
+
+# switch (fool) {
+# case 1:
+#     bar();
+#     break;
+# default:
+#     plop();
+# }
+IndentCaseLabels: false
+
+# extern "C" {
+#   void foo();
+# }
+IndentExternBlock: Indent
+
+# #if FOO
+#   #if BAR
+#     #include <foo>
+#   #endif
+# #endif
+IndentPPDirectives: BeforeHash
+
+# true:
+# template <typename It>
+#   requires Iterator<It>
+# void sort(It begin, It end) {
+#   //....
+# }
+# false:
+# template <typename It>
+# requires Iterator<It>
+# void sort(It begin, It end) {
+#   //....
+# }
+# IndentRequiresClause: false
+
+# set the standard indent to 2
+IndentWidth: 2
+
+# LoooooooooooooooooooooooooooooooooooooooongReturnType
+#     LoooooooooooooooooooooooooooooooongFunctionDeclaration();
+IndentWrappedFunctionNames: true
+
+# Would insert braces after control statements, but can be harmful, when linting is incorrect
+# InsertBraces: false
+
+# Insert a new line at end of file if missing.
+# InsertNewlineAtEOF: true
+
+# NOT!
+# if (foo)
+# {
+#
+#     bar();
+# }
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# namespace out {
+# int i;
+# namespace in {
+# int i;
+# }
+# }
+NamespaceIndentation: None
+
+PPIndentWidth: 2
+
+# Put all constructor initializers on the current line if they fit.
+# Otherwise, put each one on its own line.
+PackConstructorInitializers: CurrentLine
+
+# int* a;
+PointerAlignment: Left
+
+# Let clang-format break long comments
+ReflowComments: true
+
+# template <typename T>
+# requires C<T>
+# struct Foo {...
+
+# template <typename T>
+# requires C<T>
+# void bar(T t) {...
+# RequiresClausePosition: RCPS_OwnLine
+
+# Would remove semicolon after closing bracket of non empty function,
+# but can be harmful with incorect linting
+# RemoveSemicolon: false
+
+# Short namespaces are like normal namespaces
+ShortNamespaceLines: 0
+
+# I want to keep the includes in my order
+SortIncludes: CaseSensitive
+
+SortUsingDeclarations: true
+
+# (int) i;
+SpaceAfterCStyleCast: true
+
+# NOT!
+# ! expression
+SpaceAfterLogicalNot: false
+
+# template <int>
+SpaceAfterTemplateKeyword: true
+
+# int a = 5;
+# a += 42;
+SpaceBeforeAssignmentOperators: true
+
+# switch (foo) {
+# case 1 : {
+#   bar();
+# } break;
+SpaceBeforeCaseColon: true
+
+# Foo{foo, bar}
+SpaceBeforeCpp11BracedList: false
+
+# MyClass(int i) : pI(i) {}
+SpaceBeforeCtorInitializerColon: true
+
+# MyClass : public YourClass {};
+SpaceBeforeInheritanceColon: true
+
+# void f() {
+#     if (true) {
+#         f();
+#     }
+# }
+SpaceBeforeParens: ControlStatements
+
+# for(int i : vec) {}
+SpaceBeforeRangeBasedForLoopColon: true
+
+# int a[5];
+SpaceBeforeSquareBrackets: false
+
+# if (true) {}
+SpaceInEmptyBlock: false
+
+# f();
+SpaceInEmptyParentheses: false
+
+# void f() {
+#     if (true) {
+#         f();  // bar
+#     }
+# }
+SpacesBeforeTrailingComments: 2
+
+# static_cast<int>(arg);
+SpacesInAngles: false
+
+# x = (int32) y;
+SpacesInCStyleCastParentheses: false
+
+# t f(Deleted&) & = delete;
+SpacesInParentheses: false
+
+# int a[5];
+SpacesInSquareBrackets: false
+
+# Use features of C++11, C++14 and C++1z
+Standard: Latest
+
+# The number of columns used for tab stops
+TabWidth: 2
+
+# Never use tab
+UseTab: Never
+...

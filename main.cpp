@@ -36,10 +36,12 @@ constexpr std::string_view CORRELATION             = "corr";
 constexpr std::string_view RATIO                   = "ratio";
 constexpr std::string_view BTSP                    = "btsp";
 constexpr std::string_view BTSPP                   = "btspp";
+constexpr std::string_view BTSPP                   = "btsvpp";
 
 enum class ProblemType : unsigned int {
   BTSP_approx = 0,
   BTSPP_approx,
+  BTSVPP_approx,
   BTSP_exact,
   BTSPP_exact,
   TSP_exact,
