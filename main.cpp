@@ -59,7 +59,7 @@ constexpr std::string_view QUANTILE                = "quan";
 constexpr std::string_view RATIO                   = "ratio";
 constexpr std::string_view BTSP                    = "btsp";
 constexpr std::string_view BTSPP                   = "btspp";
-constexpr std::string_view BTSPP                   = "btsvpp";
+constexpr std::string_view BTSVPP                  = "btsvpp";
 
 enum class ProblemType : unsigned int {
   BTSP_approx = 0,
