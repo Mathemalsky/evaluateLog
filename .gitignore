@@ -4,8 +4,12 @@
 !*/
 
 !.gitignore
+!.clang-format
 
 !CMakeLists.txt
 
 !main.cpp
-!.clang-format
+
+!README.md
+
+!LICENCE

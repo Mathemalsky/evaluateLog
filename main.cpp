@@ -1,3 +1,24 @@
+/*
+ * evaluateLog is a program to calculate some statistical properties based
+ * on the data collected from BTSPP and put it into a form, that can
+ * be pasted to tikzpicture for plotting.
+ * Copyright (C) 2023 Jurek Rostalsky
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <exception>
@@ -33,6 +54,8 @@ constexpr std::string_view TIME                    = "time";
 constexpr std::string_view AVARAGE                 = "avg";
 constexpr std::string_view VARIANCE                = "var";
 constexpr std::string_view CORRELATION             = "corr";
+constexpr std::string_view MAXIMUM                 = "max";
+constexpr std::string_view QUANTILE                = "quan";
 constexpr std::string_view RATIO                   = "ratio";
 constexpr std::string_view BTSP                    = "btsp";
 constexpr std::string_view BTSPP                   = "btspp";
@@ -130,6 +153,22 @@ static Trait stringToTrait(const std::string& str) {
   }
 }
 
+static void syntaxAdvice() {
+  std::cout << "Syntax\n======\n";
+  std::cout << "Type <./<programName> help> to see this page\n";
+  std::cout << "./<programName> <filename> <problem type> <statistical property>:<trait>\n";
+  std::cout << "The problem type can be either " << BTSP << " or " << BTSPP << ".\n";
+  std::cout << "possible statistical properties: " << AVARAGE << ", " << VARIANCE << ", " << MAXIMUM << ", " << CORRELATION;
+  std::cout << ", " << QUANTILE << std::endl;
+  std::cout << "possible traits: " << NUMBER_OF_NODES << ", " << OBJECTIVE << ", " << LOWER_BOUND_ON_OPT << ", " << A_FORTIORI;
+  std::cout << ", " << EDGE_COUNT << ", " << EDGE_COUNT_IN_MINIMALLY << ", " << TIME << std::endl;
+  std::cout << "examples for <statistical property>:<trait>\n";
+  std::cout << AVARAGE << ":" << OBJECTIVE << std::endl;
+  std::cout << MAXIMUM << ":" << RATIO << ":" << EDGE_COUNT << "," << EDGE_COUNT_IN_MINIMALLY << std::endl;
+  std::cout << CORRELATION << ":" << RATIO << ":" << NUMBER_OF_NODES << "," << TIME << "," << A_FORTIORI << std::endl;
+  std::cout << QUANTILE << ":0.95," << RATIO << ":" << EDGE_COUNT << "," << NUMBER_OF_NODES << std::endl;
+}
+
 static std::map<unsigned int, std::vector<double>> extractData(const std::vector<Dataset>& data,
                                                                const ProblemType& problemType,
                                                                const Trait& trait) {
@@ -153,6 +192,15 @@ static std::map<unsigned int, std::vector<double>> extractRatioData(const std::v
     }
   }
   return dataPoints;
+}
+
+static std::map<unsigned int, double> maximum(const std::map<unsigned int, std::vector<double>>& dataPoints) {
+  std::map<unsigned int, double> maxes;
+  for (const auto& dataPoint : dataPoints) {
+    const std::vector<double>& vec = dataPoint.second;
+    maxes.emplace(dataPoint.first, vec[std::distance(vec.begin(), std::max_element(vec.begin(), vec.end()))]);
+  }
+  return maxes;
 }
 
 static std::map<unsigned int, double> avarages(const std::map<unsigned int, std::vector<double>>& dataPoints) {
@@ -195,6 +243,26 @@ static std::map<unsigned int, double> correlations(const std::map<unsigned int, 
   return corrs;
 }
 
+static std::map<unsigned int, double> quantiles(const std::map<unsigned int, std::vector<double>>& dataPoints, double p) {
+  p = std::min(p, 1.0);
+  p = std::max(p, 0.0);
+  std::map<unsigned int, double> quans;
+  for (const auto& dataPoint : dataPoints) {
+    std::vector<double> vec = dataPoint.second;
+    std::sort(vec.begin(), vec.end());
+    const double position   = p * (vec.size() - 1);
+    const size_t left_index = std::floor(position);
+    const double fraction   = position - left_index;
+    if (left_index < vec.size() - 1) {
+      quans.emplace(dataPoint.first, (1 - fraction) * vec[left_index] + fraction * vec[left_index + 1]);
+    }
+    else {
+      quans.emplace(dataPoint.first, vec.back());
+    }
+  }
+  return quans;
+}
+
 static std::vector<double> splitLine(const std::string& line) {
   std::vector<double> splittedLine;
   std::stringstream lineStream(line);
@@ -208,6 +276,9 @@ static std::vector<double> splitLine(const std::string& line) {
 
 static std::vector<std::vector<double>> parseFileIntoVector(const std::string& filename) {
   std::ifstream file(filename, std::ifstream::in);
+  if (!file) {
+    throw std::runtime_error("Error: File <" + filename + "> not found!");
+  }
   std::string line;
   std::vector<std::vector<double>> cells;
   while (std::getline(file, line)) {
@@ -252,9 +323,9 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       type = ProblemType::BTSPP_approx;
     }
     else if (argument.starts_with(AVARAGE)) {
-      argument = argument.substr(AVARAGE.length() + 1, argument.length() - AVARAGE.length() - 1);
+      argument = argument.substr(AVARAGE.length() + 1);
       if (argument.starts_with(RATIO)) {
-        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
         writeToTerminal(avarages(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
       }
       else {
@@ -262,20 +333,30 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       }
     }
     else if (argument.starts_with(VARIANCE)) {
-      argument = argument.substr(VARIANCE.length() + 1, argument.length() - VARIANCE.length() - 1);
+      argument = argument.substr(VARIANCE.length() + 1);
       if (argument.starts_with(RATIO)) {
-        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
         writeToTerminal(variances(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
       }
       else {
         writeToTerminal(variances(extractData(data, type, stringToTrait(argument))));
       }
     }
+    else if (argument.starts_with(MAXIMUM)) {
+      argument = argument.substr(MAXIMUM.length() + 1);
+      if (argument.starts_with(RATIO)) {
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
+        writeToTerminal(maximum(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
+      }
+      else {
+        writeToTerminal(maximum(extractData(data, type, stringToTrait(argument))));
+      }
+    }
     else if (argument.starts_with(CORRELATION)) {
       static std::map<unsigned int, std::vector<double>> dataPoints1, dataPoints2;
-      argument = argument.substr(CORRELATION.length() + 1, argument.length() - CORRELATION.length() - 1);
+      argument = argument.substr(CORRELATION.length() + 1);
       if (argument.starts_with(RATIO)) {
-        std::array<std::string, 2> strings  = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        std::array<std::string, 2> strings  = splitInTwo(argument.substr(RATIO.length() + 1));
         std::array<std::string, 2> strings2 = splitInTwo(strings[1]);
         Trait numerator                     = stringToTrait(strings[0]);
         Trait denominator                   = stringToTrait(strings2[0]);
@@ -288,7 +369,7 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
         argument                          = traits[1];
       }
       if (argument.starts_with(RATIO)) {
-        std::array<std::string, 2> strings = splitInTwo(argument.substr(RATIO.length() + 1, argument.length() - RATIO.length() - 1));
+        std::array<std::string, 2> strings = splitInTwo(argument.substr(RATIO.length() + 1));
         dataPoints2                        = extractRatioData(data, type, stringToTrait(strings[0]), stringToTrait(strings[1]));
       }
       else {
@@ -296,10 +377,27 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       }
       writeToTerminal(correlations(dataPoints1, dataPoints2));
     }
+    else if (argument.starts_with(QUANTILE)) {
+      argument                           = argument.substr(QUANTILE.length() + 1);
+      std::array<std::string, 2> strings = splitInTwo(argument);
+      const double p                     = std::stod(strings[0]);
+      argument                           = strings[1];
+      if (argument.starts_with(RATIO)) {
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
+        writeToTerminal(quantiles(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1])), p));
+      }
+      else {
+        writeToTerminal(quantiles(extractData(data, type, stringToTrait(argument)), p));
+      }
+    }
   }
 }
 
 int main(int argc, const char** argv) {
+  if (std::string(argv[1]) == "help") {
+    syntaxAdvice();
+    exit(0);
+  }
   std::vector<Dataset> data = castIntoDataFormat(parseFileIntoVector(argv[1]));
   readArguments(argc, argv, data);
   return 0;

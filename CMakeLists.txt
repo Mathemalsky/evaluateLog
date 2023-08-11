@@ -1,4 +1,5 @@
-# evaluateLog is a tool to bring logs from BTSPP in a form, that can
+# evaluateLog is a program to calculate some statistical properties based
+# on the data collected from BTSPP and put it into a form, that can
 # be pasted to tikzpicture for plotting.
 # Copyright (C) 2023 Jurek Rostalsky
 #
