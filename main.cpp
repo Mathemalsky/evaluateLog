@@ -60,6 +60,7 @@ constexpr std::string_view RATIO                   = "ratio";
 constexpr std::string_view BTSP                    = "btsp";
 constexpr std::string_view BTSPP                   = "btspp";
 constexpr std::string_view BTSVPP                  = "btsvpp";
+constexpr std::string_view SPACE_SEPARATION        = "-space-separation";
 
 enum class ProblemType : unsigned int {
   BTSP_approx = 0,
@@ -156,8 +157,9 @@ static Trait stringToTrait(const std::string& str) {
 static void syntaxAdvice() {
   std::cout << "Syntax\n======\n";
   std::cout << "Type <./<programName> help> to see this page\n";
-  std::cout << "./<programName> <filename> <problem type> <statistical property>:<trait>\n";
+  std::cout << "./<programName> <filename> <problem type> <optional arg> <statistical property>:<trait>\n";
   std::cout << "The problem type can be either " << BTSP << " or " << BTSPP << " or " << BTSVPP << ".\n";
+  std::cour << "If " << SPACE_SEPARATION << " is passed as <optional arg>, the ouput is separated by space and linebreak.\n";
   std::cout << "possible statistical properties: " << AVARAGE << ", " << VARIANCE << ", " << MAXIMUM << ", " << CORRELATION;
   std::cout << ", " << QUANTILE << std::endl;
   std::cout << "possible traits: " << NUMBER_OF_NODES << ", " << OBJECTIVE << ", " << LOWER_BOUND_ON_OPT << ", " << A_FORTIORI;
@@ -305,15 +307,23 @@ static std::array<std::string, 2> splitInTwo(const std::string& str, const char 
   throw std::runtime_error("No delimiter " + std::to_string(delimiter) + " found in " + str);
 }
 
-static void writeToTerminal(const std::map<unsigned int, double>& dataPoints) {
-  for (const auto& point : dataPoints) {
-    std::cout << "(" << point.first << "," << point.second << ")";
+static void writeToTerminal(const std::map<unsigned int, double>& dataPoints, const bool spaceSeparation) {
+  if (spaceSeparation) {
+    for (const auto& point : dataPoints) {
+      std::cout << point.first << " " << point.second << std::endl;
+    }
+  }
+  else {
+    for (const auto& point : dataPoints) {
+      std::cout << "(" << point.first << "," << point.second << ")";
+    }
   }
   std::cout << std::endl << std::endl;
 }
 
 static void readArguments(int argc, const char** argv, const std::vector<Dataset>& data) {
   ProblemType type;
+  bool spaceSeparation = false;
   for (int i = 2; i < argc; ++i) {
     std::string argument(argv[i]);
     if (argument == BTSP) {
@@ -325,34 +335,37 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
     else if (argument == BTSVPP) {
       type = ProblemType::BTSVPP_approx;
     }
+    else if (argument == SPACE_SEPARATION) {
+      spaceSeparation = true;
+    }
     else if (argument.starts_with(AVARAGE)) {
       argument = argument.substr(AVARAGE.length() + 1);
       if (argument.starts_with(RATIO)) {
         std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
-        writeToTerminal(avarages(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
+        writeToTerminal(avarages(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))), spaceSeparation);
       }
       else {
-        writeToTerminal(avarages(extractData(data, type, stringToTrait(argument))));
+        writeToTerminal(avarages(extractData(data, type, stringToTrait(argument))), spaceSeparation);
       }
     }
     else if (argument.starts_with(VARIANCE)) {
       argument = argument.substr(VARIANCE.length() + 1);
       if (argument.starts_with(RATIO)) {
         std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
-        writeToTerminal(variances(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
+        writeToTerminal(variances(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))), spaceSeparation);
       }
       else {
-        writeToTerminal(variances(extractData(data, type, stringToTrait(argument))));
+        writeToTerminal(variances(extractData(data, type, stringToTrait(argument))), spaceSeparation);
       }
     }
     else if (argument.starts_with(MAXIMUM)) {
       argument = argument.substr(MAXIMUM.length() + 1);
       if (argument.starts_with(RATIO)) {
         std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
-        writeToTerminal(maximum(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))));
+        writeToTerminal(maximum(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))), spaceSeparation);
       }
       else {
-        writeToTerminal(maximum(extractData(data, type, stringToTrait(argument))));
+        writeToTerminal(maximum(extractData(data, type, stringToTrait(argument))), spaceSeparation);
       }
     }
     else if (argument.starts_with(CORRELATION)) {
@@ -378,7 +391,7 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       else {
         dataPoints2 = extractData(data, type, stringToTrait(argument));
       }
-      writeToTerminal(correlations(dataPoints1, dataPoints2));
+      writeToTerminal(correlations(dataPoints1, dataPoints2), spaceSeparation);
     }
     else if (argument.starts_with(QUANTILE)) {
       argument                           = argument.substr(QUANTILE.length() + 1);
@@ -387,11 +400,14 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       argument                           = strings[1];
       if (argument.starts_with(RATIO)) {
         std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
-        writeToTerminal(quantiles(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1])), p));
+        writeToTerminal(quantiles(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1])), p), spaceSeparation);
       }
       else {
-        writeToTerminal(quantiles(extractData(data, type, stringToTrait(argument)), p));
+        writeToTerminal(quantiles(extractData(data, type, stringToTrait(argument)), p), spaceSeparation);
       }
+    }
+    else {
+      throw std::invalid_argument("Unknown argument <" + argument + ">!");
     }
   }
 }
