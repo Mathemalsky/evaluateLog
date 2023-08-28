@@ -54,6 +54,7 @@ constexpr std::string_view TIME                    = "time";
 constexpr std::string_view NUMBER_OF_EARS          = "ears";
 constexpr std::string_view AVARAGE                 = "avg";
 constexpr std::string_view VARIANCE                = "var";
+constexpr std::string_view STANDARD_DEVIATION      = "dev";
 constexpr std::string_view CORRELATION             = "corr";
 constexpr std::string_view MAXIMUM                 = "max";
 constexpr std::string_view QUANTILE                = "quan";
@@ -167,8 +168,8 @@ static void syntaxAdvice() {
   std::cout << "./<programName> <filename> <problem type> <optional arg> <statistical property>:<trait>\n";
   std::cout << "The problem type can be either " << BTSP << " or " << BTSPP << " or " << BTSVPP << ".\n";
   std::cout << "If " << SPACE_SEPARATION << " is passed as <optional arg>, the ouput is separated by space and linebreak.\n";
-  std::cout << "possible statistical properties: " << AVARAGE << ", " << VARIANCE << ", " << MAXIMUM << ", " << CORRELATION;
-  std::cout << ", " << QUANTILE << std::endl;
+  std::cout << "possible statistical properties: " << AVARAGE << ", " << VARIANCE << ", " << STANDARD_DEVIATION << ", ";
+  std::cout << MAXIMUM << ", " << CORRELATION << ", " << QUANTILE << std::endl;
   std::cout << "possible traits: " << NUMBER_OF_NODES << ", " << OBJECTIVE << ", " << LOWER_BOUND_ON_OPT << ", " << A_FORTIORI;
   std::cout << ", " << EDGE_COUNT << ", " << EDGE_COUNT_IN_MINIMALLY << ", " << TIME << ", " << NUMBER_OF_EARS << std::endl;
   std::cout << "examples for <statistical property>:<trait>\n";
@@ -229,6 +230,14 @@ static std::map<unsigned int, double> variances(const std::map<unsigned int, std
     vars.emplace(dataPoint.first, std::accumulate(vec.begin(), vec.end(), 0.0, [&](double sum, double a) {
                                     return sum + std::pow(a - avgs.at(dataPoint.first), 2);
                                   }) / vec.size());
+  }
+  return vars;
+}
+
+static std::map<unsigned int, double> standardDeviation(const std::map<unsigned int, std::vector<double>>& dataPoints) {
+  std::map<unsigned int, double> vars = variances(dataPoints);
+  for (auto& var : vars) {
+    var.second = std::sqrt(var.second);
   }
   return vars;
 }
@@ -363,6 +372,17 @@ static void readArguments(int argc, const char** argv, const std::vector<Dataset
       }
       else {
         writeToTerminal(variances(extractData(data, type, stringToTrait(argument))), spaceSeparation);
+      }
+    }
+    else if (argument.starts_with(STANDARD_DEVIATION)) {
+      argument = argument.substr(STANDARD_DEVIATION.length() + 1);
+      if (argument.starts_with(RATIO)) {
+        std::array<std::string, 2> traits = splitInTwo(argument.substr(RATIO.length() + 1));
+        writeToTerminal(standardDeviation(extractRatioData(data, type, stringToTrait(traits[0]), stringToTrait(traits[1]))),
+                        spaceSeparation);
+      }
+      else {
+        writeToTerminal(standardDeviation(extractData(data, type, stringToTrait(argument))), spaceSeparation);
       }
     }
     else if (argument.starts_with(MAXIMUM)) {
