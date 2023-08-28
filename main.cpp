@@ -51,6 +51,7 @@ constexpr std::string_view A_FORTIORI              = "a-fortiori";
 constexpr std::string_view EDGE_COUNT              = "edges";
 constexpr std::string_view EDGE_COUNT_IN_MINIMALLY = "edgesInMinimally";
 constexpr std::string_view TIME                    = "time";
+constexpr std::string_view NUMBER_OF_EARS          = "ears";
 constexpr std::string_view AVARAGE                 = "avg";
 constexpr std::string_view VARIANCE                = "var";
 constexpr std::string_view CORRELATION             = "corr";
@@ -80,7 +81,8 @@ enum class Trait : unsigned int {
   aFortioriGuarantee,
   numberOfEdgesInBiconnectedGraph,
   numberOfEdgesInMinimallyBiconnectedGraph,
-  time
+  time,
+  numberOfEars
 };
 
 struct Dataset {
@@ -119,6 +121,8 @@ struct Dataset {
       return numberOfEdgesInMinimallyBiconnectedGraph;
     case Trait::time :
       return time;
+    case Trait::numberOfEars :
+      return numberOfEdgesInMinimallyBiconnectedGraph - numberOfNodes + 1;
 
     default :
       throw std::invalid_argument("Unknown trait!");
@@ -149,6 +153,9 @@ static Trait stringToTrait(const std::string& str) {
   else if (str == TIME) {
     return Trait::time;
   }
+  else if (str == NUMBER_OF_EARS) {
+    return Trait::numberOfEars;
+  }
   else {
     throw std::invalid_argument("Unknown trait <" + str + ">!");
   }
@@ -159,11 +166,11 @@ static void syntaxAdvice() {
   std::cout << "Type <./<programName> help> to see this page\n";
   std::cout << "./<programName> <filename> <problem type> <optional arg> <statistical property>:<trait>\n";
   std::cout << "The problem type can be either " << BTSP << " or " << BTSPP << " or " << BTSVPP << ".\n";
-  std::cour << "If " << SPACE_SEPARATION << " is passed as <optional arg>, the ouput is separated by space and linebreak.\n";
+  std::cout << "If " << SPACE_SEPARATION << " is passed as <optional arg>, the ouput is separated by space and linebreak.\n";
   std::cout << "possible statistical properties: " << AVARAGE << ", " << VARIANCE << ", " << MAXIMUM << ", " << CORRELATION;
   std::cout << ", " << QUANTILE << std::endl;
   std::cout << "possible traits: " << NUMBER_OF_NODES << ", " << OBJECTIVE << ", " << LOWER_BOUND_ON_OPT << ", " << A_FORTIORI;
-  std::cout << ", " << EDGE_COUNT << ", " << EDGE_COUNT_IN_MINIMALLY << ", " << TIME << std::endl;
+  std::cout << ", " << EDGE_COUNT << ", " << EDGE_COUNT_IN_MINIMALLY << ", " << TIME << ", " << NUMBER_OF_EARS << std::endl;
   std::cout << "examples for <statistical property>:<trait>\n";
   std::cout << AVARAGE << ":" << OBJECTIVE << std::endl;
   std::cout << MAXIMUM << ":" << RATIO << ":" << EDGE_COUNT << "," << EDGE_COUNT_IN_MINIMALLY << std::endl;
